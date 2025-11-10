@@ -5,7 +5,7 @@ This folder contains the JUnit test classes for the Storage Module.
 
 ## Requirements
 - Java 17 or later
-- JUnit standalone console JAR: `junit-platform-console-standalone-6.0.1.jar`
+- JUnit standalone console JAR: [`junit-platform-console-standalone-6.0.1.jar`](https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/6.0.1/junit-platform-console-standalone-6.0.1.jar)
 
 ## Setup
 1. In the **root directory** of the project (`CapstoneProject`), create a folder named `lib`.
