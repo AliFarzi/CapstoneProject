@@ -1,7 +1,7 @@
-package StorageModule.test.model;
+package StorageModule.model;
 
 import StorageModule.exceptions.CellEmptyException;
-import StorageModule.model.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

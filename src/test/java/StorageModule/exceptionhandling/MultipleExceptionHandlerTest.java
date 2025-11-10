@@ -1,9 +1,9 @@
-package StorageModule.test.exceptionhandling;
+package StorageModule.exceptionhandling;
 
 import org.junit.jupiter.api.Test;
 import StorageModule.exceptions.*;
 import StorageModule.model.Position;
-import StorageModule.exceptionhandling.MultipleExceptionHandler;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MultipleExceptionHandlerTest {

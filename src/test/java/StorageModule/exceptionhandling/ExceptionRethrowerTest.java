@@ -1,8 +1,8 @@
-package StorageModule.test.exceptionhandling;
+package StorageModule.exceptionhandling;
 
 import org.junit.jupiter.api.Test;
 import StorageModule.exceptions.StorageFullException;
-import StorageModule.exceptionhandling.ExceptionRethrower;
+
 import StorageModule.model.Position;
 import static org.junit.jupiter.api.Assertions.*;
 

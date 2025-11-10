@@ -1,9 +1,9 @@
-package StorageModule.test.exceptions;
+package StorageModule.exceptions;
 
 
 import StorageModule.model.Position;
 import StorageModule.constants.ExceptionMessages;
-import StorageModule.exceptions.CellOccupiedException;
+
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

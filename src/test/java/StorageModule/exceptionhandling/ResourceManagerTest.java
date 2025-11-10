@@ -1,11 +1,11 @@
-package StorageModule.test.exceptionhandling;
+package StorageModule.exceptionhandling;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import StorageModule.model.Item;
 import StorageModule.model.Position;
-import StorageModule.exceptionhandling.ResourceManager;
+
 
 import java.io.IOException;
 import java.nio.file.Files;

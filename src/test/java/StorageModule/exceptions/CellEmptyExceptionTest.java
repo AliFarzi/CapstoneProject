@@ -1,7 +1,6 @@
-package StorageModule.test.exceptions;
+package StorageModule.exceptions;
 
 import org.junit.jupiter.api.Test;
-import StorageModule.exceptions.CellEmptyException;
 import StorageModule.model.Position;
 import StorageModule.constants.ExceptionMessages;
 import static org.junit.jupiter.api.Assertions.*;

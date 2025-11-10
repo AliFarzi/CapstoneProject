@@ -1,7 +1,7 @@
-package StorageModule.test.exceptions;
+package StorageModule.exceptions;
 
 
-import StorageModule.exceptions.StorageFullException;
+
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

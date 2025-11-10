@@ -1,8 +1,8 @@
-package StorageModule.test.exceptions;
+package StorageModule.exceptions;
 
 
 import StorageModule.model.Position;
-import StorageModule.exceptions.CellLockedException;
+
 import StorageModule.constants.ExceptionMessages;
 
 import org.junit.jupiter.api.Test;
