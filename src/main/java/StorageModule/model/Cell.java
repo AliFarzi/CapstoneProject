@@ -24,17 +24,15 @@ public class Cell {
         return !locked && isEmpty();
     }
 
-    // Store an item in the cell
     public void store(Item item) {
-        if (!isAvailable()) {
-            throw new IllegalStateException("Cell " + id + " is not available!");
+        if (!isEmpty()) { 
+            throw new IllegalStateException("Cell " + id + " is already occupied!");
         }
         this.content = item;
         item.moveTo(this.position);
         item.updateStatus(Item.Status.STORED);
     }
 
-    // Remove the item from the cell
     public Item retrieve() throws CellEmptyException {
         if (isEmpty()) {
             throw new CellEmptyException();

@@ -12,7 +12,8 @@ public class StorageManager {
         this.storage = storage;
     }
 
-    public void addItem(Item item, Position position)
+    //  Synchronized - prevents multiple AGVs storing to same position
+    public synchronized void addItem(Item item, Position position)
             throws CellOccupiedException, CellLockedException, CellNotFoundException {
 
         Cell cell = storage.getCell(position);
@@ -27,19 +28,39 @@ public class StorageManager {
         item.moveTo(position);
     }
 
-    // Add an item to the first available cell in the warehouse.
-    public void addItem(Item item)
+    /**
+       AUTO PLACEMENT
+       Synchronized + lock cell immediately
+    */
+    public synchronized void addItem(Item item)
             throws StorageFullException, CellOccupiedException, CellLockedException, CellNotFoundException {
 
-        Cell cell = findFirstAvailableCell();
+        // Find AND lock cell in one atomic operation
+        Cell cell = null;
+        List<Cell> cells = storage.getCells();
+        
+        for (Cell c : cells) {
+            if (c.isAvailable()) {
+                c.lock();  // Lock immediately when found!
+                cell = c;
+                break;
+            }
+        }
+
         if (cell == null) {
             throw new StorageFullException();
         }
 
-        addItem(item, cell.getPosition());
+        try {
+            cell.store(item);
+            item.moveTo(cell.getPosition());
+        } finally {
+            cell.unlock();  // Always unlock, even if exception
+        }
     }
 
-    public Item retrieveItem(Position position)
+    //  Synchronized - prevents multiple AGVs retrieving from same cell
+    public synchronized Item retrieveItem(Position position)
             throws CellEmptyException, CellLockedException, CellNotFoundException {
 
         Cell cell = storage.getCell(position);
@@ -55,7 +76,8 @@ public class StorageManager {
         return item;
     }
 
-    public void moveItem(Position from, Position to)
+    //   Synchronized - prevents multiple AGVs moving to same destination
+    public synchronized void moveItem(Position from, Position to)
             throws CellEmptyException, CellOccupiedException, CellLockedException, CellNotFoundException {
 
         Cell fromCell = storage.getCell(from);
@@ -76,7 +98,8 @@ public class StorageManager {
         item.moveTo(to);
     }
 
-    // Find the first available empty cell (default strategy: first-fit)
+    //  NO synchronization - not called directly by AGVs
+    //  Logic integrated into addItem(Item) with proper locking @AliFarzi(Please check this comment)
     public Cell findFirstAvailableCell() {
         List<Cell> cells = storage.getCells();
         for (Cell cell : cells) {
@@ -87,6 +110,7 @@ public class StorageManager {
         return null;
     }
 
+   
     public int countAvailableCells() {
         int count = 0;
         for (Cell cell : storage.getCells()) {
@@ -96,7 +120,7 @@ public class StorageManager {
         return count;
     }
 
-    // Print storage info (for debugging)
+
     public void printStorageInfo() {
         System.out.println("Storage: " + storage.getName());
         System.out.println("Total cells: " + storage.getCells().size());
