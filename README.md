@@ -23,7 +23,7 @@
 ```
 CAPSTONE_FINAL/
 │
-├── 📦 StorageModule/          # Warehouse storage management
+├──  StorageModule/          # Warehouse storage management
 │   ├── model/
 │   │   ├── Cell.java          # Individual storage cell
 │   │   ├── Item.java          # Stored items
@@ -33,7 +33,7 @@ CAPSTONE_FINAL/
 │   │   └── StorageManager.java # Thread-safe operations
 │   └── exceptions/
 │
-├── 🤖 EquipmentModule/        # AGV and equipment management
+├──  EquipmentModule/        # AGV and equipment management
 │   ├── model/
 │   │   ├── AGV.java           # Autonomous Guided Vehicle
 │   │   ├── Equipment.java     # Base equipment class
@@ -43,13 +43,13 @@ CAPSTONE_FINAL/
 │   └── service/
 │       └── EquipmentManager.java # Thread-safe equipment control
 │
-├── 📋 TaskModule/             # Task orchestration
+├──  TaskModule/             # Task orchestration
 │   ├── ChargingTask.java      # Battery charging operations
 │   ├── WarehouseTask.java     # Storage operations
 │   ├── TaskManager.java       # Main orchestrator
 │   └── SimulateProject.java   # Testing suite
 │
-└── 📝 LoggingModule/          # Activity logging
+└──  LoggingModule/          # Activity logging
     └── LoggingManager.java
 ```
 
@@ -63,10 +63,10 @@ Our system uses **single-layer synchronization** at the service layer for optima
 
 #### **StorageManager (4 synchronized methods)**
 ```java
-✅ synchronized void addItem(Item, Position)      // Manual placement
-✅ synchronized void addItem(Item)                 // Auto placement + cell locking
-✅ synchronized Item retrieveItem(Position)        // Item retrieval
-✅ synchronized void moveItem(Position, Position)  // Item relocation
+ synchronized void addItem(Item, Position)      // Manual placement
+ synchronized void addItem(Item)                 // Auto placement + cell locking
+ synchronized Item retrieveItem(Position)        // Item retrieval
+ synchronized void moveItem(Position, Position)  // Item relocation
 ```
 
 @everyone (we can add each synch methods here)
@@ -85,7 +85,7 @@ Multiple AGVs (Threads)
 ```
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### **Prerequisites**
 - Java 17 or higher
@@ -103,7 +103,7 @@ Commands @Everyone
 
 ---
 
-## 📊 Test Results
+##  Test Results
 
 Here we can put screenshot of test results!
 @Everyone
