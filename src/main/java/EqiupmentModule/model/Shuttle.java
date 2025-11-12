@@ -15,10 +15,10 @@ public class Shuttle extends Equipment {
     }
 
     // needs to be changed later
-    @Override
-    public void charge(ChargingStation c) {
-        if (c.startCharging(this)) {
-            this.setState(EquipmentState.CHARGING);
-        }
-    }
+    // @Override
+    // public void charge(ChargingStation c) {
+    //     if (c.startCharging(this)) {
+    //         this.setState(EquipmentState.CHARGING);
+    //     }
+    // }
 }

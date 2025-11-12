@@ -45,7 +45,7 @@ public class TaskManager {
         ExecutorService executor = Executors.newFixedThreadPool(stations.size());
 
       
-        int N = 3; // create 10 AGVs
+        int N = 10; // create 10 AGVs
 
         System.out.println("Creating and assigning AGVs to Charging Stations..." + N + " AGVs to be created, and " + K + " Stations available.");
 

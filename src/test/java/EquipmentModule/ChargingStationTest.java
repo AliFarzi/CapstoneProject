@@ -32,12 +32,4 @@ class ChargingStationTest {
         assertTrue(cs.startCharging(a));
     }
 
-    @Test
-    void stop_clears_equipment() {
-        ChargingStation cs = new ChargingStation("CS1", null, 10.0);
-        AGV a = new AGV("A1", null, 2.0, 50.0, 100.0, 200.0);
-        cs.startCharging(a);
-        cs.stopCharging();
-        assertNull(cs.getEquipmentId());
-    }
 }

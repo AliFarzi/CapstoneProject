@@ -66,5 +66,5 @@ public abstract class Equipment {
         this.state = state;
     }
 
-    public abstract void charge(ChargingStation c);
+    // public abstract void charge(ChargingStation c);
 }
