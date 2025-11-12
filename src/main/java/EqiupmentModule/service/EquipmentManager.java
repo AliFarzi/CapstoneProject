@@ -79,7 +79,7 @@ public class EquipmentManager {
 
     public void release(String id) throws EquipmentOperationException {
         Equipment e = requireById(id);
-        if (e.getState() != Equipment.EquipmentState.IDLE ) {
+        if (e.getState() == Equipment.EquipmentState.IDLE ) {
             throw new InvalidEquipmentStateException("Only BUSY equipment can be released");
         }
         e.setState(Equipment.EquipmentState.IDLE);
