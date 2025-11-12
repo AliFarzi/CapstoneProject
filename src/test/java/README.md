@@ -9,7 +9,7 @@ This folder contains the JUnit test classes for the Storage Module.
 
 ## Setup
 1. In the **root directory** of the project (`CapstoneProject`), create a folder named `lib`.
-2. Copy the `junit-platform-console-standalone-1.10.0.jar` file into the `lib` folder.
+2. Copy the `junit-platform-console-standalone-6.0.1.jar` file into the `lib` folder.
 3. Add the JAR to the **classpath** of the project.
 4. Ensure the `src/test/java` folder is included as a test source folder.
 
