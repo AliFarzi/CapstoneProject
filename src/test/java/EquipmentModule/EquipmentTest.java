@@ -11,9 +11,9 @@ class EquipmentTest {
             super("D1", null, 2.0, 50.0);
         }
 
-        @Override
-        public void charge(ChargingStation c) {
-        }
+        // @Override
+        // public void charge(ChargingStation c) {
+        // }
     }
 
     @Test
