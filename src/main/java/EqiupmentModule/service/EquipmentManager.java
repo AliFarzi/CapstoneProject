@@ -97,14 +97,14 @@ public class EquipmentManager {
             synchronized (e) {
                 if (e.getState() == Equipment.EquipmentState.BUSY ) {
                 throw new EquipmentUnavailableException("Busy equipment cannot start charging");
-            }
+                }
 
-            if (e.getState() == Equipment.EquipmentState.CHARGING) {
-                throw new InvalidEquipmentStateException("Equipment is already charging");
-            }
-            e.setState(Equipment.EquipmentState.CHARGING);
-            station.assignEquipment(e);
-            logger.log("Charging started for " + e.getId(), LogLevel.INFO, "EquipmentManager");
+                if (e.getState() == Equipment.EquipmentState.CHARGING) {
+                    throw new InvalidEquipmentStateException("Equipment is already charging");
+                }
+                e.setState(Equipment.EquipmentState.CHARGING);
+                station.assignEquipment(e);
+                logger.log("Charging started for " + e.getId(), LogLevel.INFO, "EquipmentManager");
         }
             
 
@@ -122,10 +122,10 @@ public class EquipmentManager {
         synchronized (e) {
             if (e.getState() != Equipment.EquipmentState.CHARGING ) {
             throw new InvalidEquipmentStateException("Only CHARGING equipment can be released from charge");
-        }
-        e.setState(Equipment.EquipmentState.IDLE);
-        station.unassignEquipment(e);
-        logger.log("Released from charge " + e.getId(), LogLevel.INFO, "EquipmentManager");
+            }
+            e.setState(Equipment.EquipmentState.IDLE);
+            station.unassignEquipment(e);
+            logger.log("Released from charge " + e.getId(), LogLevel.INFO, "EquipmentManager");
     }
 }
 

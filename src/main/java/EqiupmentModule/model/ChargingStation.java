@@ -79,7 +79,7 @@ public class ChargingStation {
         }
        
     }
-    public void startChargingSteps(Equipment equipment) throws EquipmentChargeFullException {
+    public synchronized void startChargingSteps(Equipment equipment) throws EquipmentChargeFullException {
 
         synchronized (equipment) {
             if (equipment.getBatteryLevel() >= 100.0) {
