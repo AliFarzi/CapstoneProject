@@ -1,8 +1,8 @@
 package EqiupmentModule.model;
 
 import StorageModule.model.Position;
-import LogingModule.LoggingManager;
-import LogingModule.LogLevel;
+import LoggingModule.LoggingManager;
+import LoggingModule.LogLevel;
 
 public class AGV extends Equipment {
     private final double maxLoadWeight;

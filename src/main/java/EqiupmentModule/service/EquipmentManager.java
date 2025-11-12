@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import EqiupmentModule.model.*;
-import LogingModule.LoggingManager;
-import LogingModule.LogLevel;
+import LoggingModule.LoggingManager;
+import LoggingModule.LogLevel;
 import EqiupmentModule.service.exceptions.*;
 
 public class EquipmentManager {

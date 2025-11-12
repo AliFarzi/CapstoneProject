@@ -4,8 +4,8 @@ import EqiupmentModule.model.ChargingStation;
 import EqiupmentModule.model.Equipment;
 import EqiupmentModule.service.EquipmentManager;
 import EqiupmentModule.service.exceptions.EquipmentChargeFullException;
-import LogingModule.LoggingManager;
-import LogingModule.LogLevel;
+import LoggingModule.LoggingManager;
+import LoggingModule.LogLevel;
 
 public class ChargingTask implements Runnable {
     private final String id;

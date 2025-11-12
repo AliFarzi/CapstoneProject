@@ -1,7 +1,7 @@
 package EqiupmentModule.service.exceptions;
 
-import LogingModule.LogLevel;
-import LogingModule.LoggingManager;
+import LoggingModule.LogLevel;
+import LoggingModule.LoggingManager;
 
 public class EquipmentOperationException extends Exception {
     public EquipmentOperationException(String message) {

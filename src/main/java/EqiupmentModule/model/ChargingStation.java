@@ -2,8 +2,8 @@ package EqiupmentModule.model;
 
 import java.util.ArrayList;
 
-import LogingModule.LogLevel;
-import LogingModule.LoggingManager;
+import LoggingModule.LogLevel;
+import LoggingModule.LoggingManager;
 import StorageModule.model.Position;
 import EqiupmentModule.service.exceptions.EquipmentChargeFullException;
 
