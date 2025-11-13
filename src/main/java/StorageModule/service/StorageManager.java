@@ -11,6 +11,10 @@ public class StorageManager {
     public StorageManager(Storage storage) {
         this.storage = storage;
     }
+    
+    public Storage getStorage() {
+        return storage;
+    }
 
     //  Synchronized - prevents multiple AGVs storing to same position
     public synchronized void addItem(Item item, Position position)

@@ -1,4 +1,4 @@
-package LogingModule;
+package LoggingModule;
 
 import java.io.File;
 import java.util.Scanner;

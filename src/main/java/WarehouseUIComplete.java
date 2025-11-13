@@ -23,6 +23,7 @@ import TaskModule.ChargingTask;
 import java.util.concurrent.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.io.File;
 
 public class WarehouseUIComplete extends Application {
     
@@ -47,7 +48,7 @@ public class WarehouseUIComplete extends Application {
     private VBox positionSection;
     private VBox toastContainer;
     
-    // ✅ Task Queue UI
+    // Task Queue UI
     private ListView<String> taskQueueList;
     private List<QueuedTask> taskQueue = new ArrayList<>();
     
@@ -68,7 +69,7 @@ public class WarehouseUIComplete extends Application {
         showSetupDialog(primaryStage);
     }
     
-    // ✅ Task Queue Structure
+    // Task Queue Structure
     static class QueuedTask {
         String vehicle;
         String item;
@@ -102,6 +103,21 @@ public class WarehouseUIComplete extends Application {
                 return String.format("📤 %s: Retrieve from %s", vehicleId, position);
             }
             return task;
+        }
+    }
+    
+    // Log File Item Class
+    static class LogFileItem {
+        String fileName;
+        String folderPath;
+        File file;
+        long fileSize;
+        
+        public LogFileItem(String fileName, String folderPath, File file) {
+            this.fileName = fileName;
+            this.folderPath = folderPath;
+            this.file = file;
+            this.fileSize = file.length();
         }
     }
     
@@ -345,9 +361,28 @@ public class WarehouseUIComplete extends Application {
         header.setPadding(new Insets(20));
         header.setStyle("-fx-background-color: linear-gradient(to right, #667eea 0%, #764ba2 100%);");
         
+        HBox topRow = new HBox();
+        topRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(topRow, Priority.ALWAYS);
+        
         Label title = new Label("🏭 Smart Warehouse Management System");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 28));
         title.setTextFill(Color.WHITE);
+        HBox.setHgrow(title, Priority.ALWAYS);
+        
+        Button checkLogsBtn = new Button("📋 Check Logs");
+        checkLogsBtn.setStyle("""
+            -fx-background-color: #FFD700;
+            -fx-text-fill: #333;
+            -fx-font-size: 14px;
+            -fx-font-weight: bold;
+            -fx-padding: 10 20;
+            -fx-background-radius: 20;
+            -fx-cursor: hand;
+        """);
+        checkLogsBtn.setOnAction(e -> openLogsViewer());
+        
+        topRow.getChildren().addAll(title, checkLogsBtn);
         
         int numAGVs = (int) equipmentManager.getAll().stream()
             .filter(e -> e instanceof AGV).count();
@@ -368,7 +403,7 @@ public class WarehouseUIComplete extends Application {
         activeTasksLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         activeTasksLabel.setTextFill(Color.web("#FFD700"));
         
-        header.getChildren().addAll(title, subtitle, activeTasksLabel);
+        header.getChildren().addAll(topRow, subtitle, activeTasksLabel);
         return header;
     }
     
@@ -397,7 +432,7 @@ public class WarehouseUIComplete extends Application {
         
         panel.getChildren().addAll(
             createDropdownSection(),
-            createTaskQueueSection(), // ✅ NEW: Task Queue
+            createTaskQueueSection(),
             createRunningTasksSection(),
             createChargingSection()
         );
@@ -463,7 +498,6 @@ public class WarehouseUIComplete extends Application {
         return section;
     }
     
-    // ✅ NEW: Task Queue Section
     private VBox createTaskQueueSection() {
         VBox section = new VBox(10);
         
@@ -518,7 +552,6 @@ public class WarehouseUIComplete extends Application {
         return section;
     }
     
-    // ✅ Add task to queue
     private void addTaskToQueue() {
         String vehicle = vehicleDropdown.getValue();
         String item = itemDropdown.getValue();
@@ -554,7 +587,6 @@ public class WarehouseUIComplete extends Application {
         logTask("📋 Added to queue: " + qTask.toString());
     }
     
-    // ✅ Execute all tasks concurrently
     private void executeAllTasks() {
         if (taskQueue.isEmpty()) {
             showToast("⚠️ Queue is empty!", "warning");
@@ -613,7 +645,6 @@ public class WarehouseUIComplete extends Application {
         });
     }
     
-    // ✅ Execute a queued task
     private void executeQueuedTask(String taskId, QueuedTask qTask) throws Exception {
         String vehicleId = qTask.vehicle.split(" - ")[0];
         
@@ -934,6 +965,365 @@ public class WarehouseUIComplete extends Application {
         statusBar.getChildren().add(statusLabel);
         return statusBar;
     }
+    
+    // ============ LOG VIEWER METHODS ============
+    
+    private void openLogsViewer() {
+        Stage logStage = new Stage();
+        logStage.setTitle("📋 Log Management System");
+        
+        BorderPane logLayout = new BorderPane();
+        logLayout.setStyle("-fx-background-color: #F5F5F5;");
+        
+        TreeView<String> folderTree = createLogFolderTree();
+        folderTree.setPrefWidth(300);
+        
+        VBox leftPanel = new VBox(10);
+        leftPanel.setPadding(new Insets(15));
+        leftPanel.setStyle("-fx-background-color: white;");
+        
+        Label treeTitle = new Label("📁 Log Folders");
+        treeTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        
+        leftPanel.getChildren().addAll(treeTitle, folderTree);
+        
+        VBox rightPanel = new VBox(15);
+        rightPanel.setPadding(new Insets(15));
+        
+        Label filesTitle = new Label("📄 Log Files (Multi-Select Enabled)");
+        filesTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        
+        ListView<LogFileItem> logFilesList = new ListView<>();
+        logFilesList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        logFilesList.setPrefHeight(400);
+        logFilesList.setPlaceholder(new Label("Select a folder to view log files"));
+        
+        logFilesList.setCellFactory(param -> new ListCell<LogFileItem>() {
+            @Override
+            protected void updateItem(LogFileItem item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("📄 %s (%.2f KB) - %s", 
+                        item.fileName, 
+                        item.fileSize / 1024.0,
+                        item.folderPath));
+                }
+            }
+        });
+        
+        Label selectionLabel = new Label("Selected: 0 files");
+        selectionLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        selectionLabel.setTextFill(Color.web("#2196F3"));
+        
+        HBox actionButtons = new HBox(10);
+        actionButtons.setAlignment(Pos.CENTER);
+        
+        Button showLogBtn = new Button("👁️ Show Log");
+        showLogBtn.setStyle(getButtonStyle("#2196F3"));
+        showLogBtn.setDisable(true);
+        
+        Button archiveSelectedBtn = new Button("📦 Archive Selected");
+        archiveSelectedBtn.setStyle(getButtonStyle("#FF9800"));
+        archiveSelectedBtn.setDisable(true);
+        
+        Button deleteSelectedBtn = new Button("🗑️ Delete Selected");
+        deleteSelectedBtn.setStyle(getButtonStyle("#f44336"));
+        deleteSelectedBtn.setDisable(true);
+        
+        Button selectAllBtn = new Button("✅ Select All");
+        selectAllBtn.setStyle(getButtonStyle("#4CAF50"));
+        selectAllBtn.setDisable(true);
+        
+        Button clearSelectionBtn = new Button("❌ Clear Selection");
+        clearSelectionBtn.setStyle(getButtonStyle("#9E9E9E"));
+        clearSelectionBtn.setDisable(true);
+        
+        actionButtons.getChildren().addAll(showLogBtn, archiveSelectedBtn, deleteSelectedBtn);
+        
+        HBox selectionButtons = new HBox(10);
+        selectionButtons.setAlignment(Pos.CENTER);
+        selectionButtons.getChildren().addAll(selectAllBtn, clearSelectionBtn);
+        
+        rightPanel.getChildren().addAll(filesTitle, selectionLabel, logFilesList, selectionButtons, actionButtons);
+        
+        folderTree.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.isLeaf()) {
+                updateLogFilesList(newVal.getValue(), logFilesList);
+            }
+        });
+        
+        logFilesList.getSelectionModel().getSelectedItems().addListener(
+            (javafx.collections.ListChangeListener.Change<? extends LogFileItem> c) -> {
+                int selectedCount = logFilesList.getSelectionModel().getSelectedItems().size();
+                selectionLabel.setText("Selected: " + selectedCount + " file(s)");
+                
+                boolean hasSelection = selectedCount > 0;
+                showLogBtn.setDisable(selectedCount != 1);
+                archiveSelectedBtn.setDisable(!hasSelection);
+                deleteSelectedBtn.setDisable(!hasSelection);
+                clearSelectionBtn.setDisable(!hasSelection);
+            });
+        
+        logFilesList.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends LogFileItem> c) -> {
+            selectAllBtn.setDisable(logFilesList.getItems().isEmpty());
+        });
+        
+        showLogBtn.setOnAction(e -> {
+            LogFileItem selected = logFilesList.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                showLogContent(selected);
+            }
+        });
+        
+        selectAllBtn.setOnAction(e -> {
+            logFilesList.getSelectionModel().selectAll();
+        });
+        
+        clearSelectionBtn.setOnAction(e -> {
+            logFilesList.getSelectionModel().clearSelection();
+        });
+        
+        archiveSelectedBtn.setOnAction(e -> {
+            List<LogFileItem> selectedFiles = new ArrayList<>(
+                logFilesList.getSelectionModel().getSelectedItems());
+            if (!selectedFiles.isEmpty()) {
+                archiveMultipleLogFiles(selectedFiles);
+                TreeItem<String> currentFolder = folderTree.getSelectionModel().getSelectedItem();
+                if (currentFolder != null) {
+                    updateLogFilesList(currentFolder.getValue(), logFilesList);
+                }
+            }
+        });
+        
+        deleteSelectedBtn.setOnAction(e -> {
+            List<LogFileItem> selectedFiles = new ArrayList<>(
+                logFilesList.getSelectionModel().getSelectedItems());
+            if (!selectedFiles.isEmpty()) {
+                deleteMultipleLogFiles(selectedFiles);
+                TreeItem<String> currentFolder = folderTree.getSelectionModel().getSelectedItem();
+                if (currentFolder != null) {
+                    updateLogFilesList(currentFolder.getValue(), logFilesList);
+                }
+            }
+        });
+        
+        logLayout.setLeft(leftPanel);
+        logLayout.setCenter(rightPanel);
+        
+        Scene logScene = new Scene(logLayout, 1000, 650);
+        logStage.setScene(logScene);
+        logStage.show();
+    }
+    
+    private TreeView<String> createLogFolderTree() {
+        TreeItem<String> root = new TreeItem<>("📁 Logs");
+        root.setExpanded(true);
+        
+        File logsDir = new File("src/main/java/logs");
+        
+        if (logsDir.exists() && logsDir.isDirectory()) {
+            populateTreeView(logsDir, root);
+        } else {
+            showToast("⚠️ Logs directory not found at: " + logsDir.getAbsolutePath(), "warning");
+        }
+        
+        TreeView<String> treeView = new TreeView<>(root);
+        return treeView;
+    }
+    
+    private void populateTreeView(File directory, TreeItem<String> parent) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    TreeItem<String> item = new TreeItem<>("📁 " + file.getName());
+                    parent.getChildren().add(item);
+                    populateTreeView(file, item);
+                }
+            }
+        }
+    }
+    
+    private void updateLogFilesList(String folderName, ListView<LogFileItem> listView) {
+        listView.getItems().clear();
+        folderName = folderName.replace("📁 ", "");
+        
+        File logsDir = new File("src/main/java/logs");
+        File targetFolder = findFolder(logsDir, folderName);
+        
+        if (targetFolder != null && targetFolder.exists()) {
+            File[] files = targetFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".log"));
+            if (files != null && files.length > 0) {
+                for (File file : files) {
+                    listView.getItems().add(new LogFileItem(file.getName(), folderName, file));
+                }
+                listView.setPlaceholder(new Label("Loaded " + files.length + " log file(s)"));
+            } else {
+                listView.setPlaceholder(new Label("No .log files found in this folder"));
+            }
+        } else {
+            listView.setPlaceholder(new Label("Folder not found: " + folderName));
+        }
+    }
+    
+    private File findFolder(File directory, String folderName) {
+        if (directory.getName().equals(folderName)) {
+            return directory;
+        }
+        
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    File found = findFolder(file, folderName);
+                    if (found != null) return found;
+                }
+            }
+        }
+        return null;
+    }
+    
+    private void showLogContent(LogFileItem logItem) {
+        if (!logItem.file.exists()) {
+            showToast("❌ File not found: " + logItem.fileName, "error");
+            return;
+        }
+        
+        Stage contentStage = new Stage();
+        contentStage.setTitle("📄 " + logItem.fileName);
+        
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(15));
+        
+        HBox infoBox = new HBox(20);
+        infoBox.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 10; -fx-background-radius: 5;");
+        Label pathLabel = new Label("📁 " + logItem.folderPath + "/" + logItem.fileName);
+        Label sizeLabel = new Label(String.format("📊 Size: %.2f KB", logItem.fileSize / 1024.0));
+        infoBox.getChildren().addAll(pathLabel, sizeLabel);
+        
+        TextArea contentArea = new TextArea();
+        contentArea.setEditable(false);
+        contentArea.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 12px;");
+        VBox.setVgrow(contentArea, Priority.ALWAYS);
+        
+        try {
+            String content = new String(java.nio.file.Files.readAllBytes(logItem.file.toPath()));
+            contentArea.setText(content);
+            
+            long lineCount = content.lines().count();
+            Label lineLabel = new Label("📝 Lines: " + lineCount);
+            infoBox.getChildren().add(lineLabel);
+            
+        } catch (Exception e) {
+            contentArea.setText("❌ Error reading file: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        layout.getChildren().addAll(infoBox, contentArea);
+        
+        Scene scene = new Scene(layout, 900, 650);
+        contentStage.setScene(scene);
+        contentStage.show();
+    }
+    
+    private void archiveMultipleLogFiles(List<LogFileItem> logItems) {
+        if (logItems.isEmpty()) return;
+        
+        String zipFileName = "archived_logs_" + System.currentTimeMillis() + ".zip";
+        File zipFile = new File(logItems.get(0).file.getParentFile(), zipFileName);
+        
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(
+                new java.io.FileOutputStream(zipFile))) {
+            
+            for (LogFileItem logItem : logItems) {
+                if (!logItem.file.exists()) {
+                    logTask("⚠️ Skipping missing file: " + logItem.fileName);
+                    continue;
+                }
+                
+                String entryName = logItem.folderPath + "/" + logItem.fileName;
+                java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryName);
+                zos.putNextEntry(entry);
+                
+                byte[] bytes = java.nio.file.Files.readAllBytes(logItem.file.toPath());
+                zos.write(bytes, 0, bytes.length);
+                zos.closeEntry();
+                
+                logTask("📦 Added to archive: " + entryName);
+            }
+            
+            showToast(String.format("✅ Archived %d files → %s", logItems.size(), zipFileName), "success");
+            logTask(String.format("📦 Created archive: %s with %d files", zipFileName, logItems.size()));
+            
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Archive Created");
+                alert.setHeaderText("Archive created successfully!");
+                alert.setContentText("Archive: " + zipFile.getAbsolutePath() + 
+                                   "\nSize: " + String.format("%.2f KB", zipFile.length() / 1024.0));
+                alert.showAndWait();
+            });
+            
+        } catch (Exception e) {
+            showToast("❌ Archive failed: " + e.getMessage(), "error");
+            e.printStackTrace();
+        }
+    }
+    
+    private void deleteMultipleLogFiles(List<LogFileItem> logItems) {
+        if (logItems.isEmpty()) return;
+        
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("⚠️ Confirm Delete");
+        confirmAlert.setHeaderText("Delete " + logItems.size() + " log file(s)?");
+        
+        StringBuilder fileList = new StringBuilder("Files to be deleted:\n\n");
+        for (LogFileItem item : logItems) {
+            fileList.append("• ").append(item.folderPath).append("/").append(item.fileName).append("\n");
+        }
+        fileList.append("\nThis action cannot be undone!");
+        
+        confirmAlert.setContentText(fileList.toString());
+        
+        confirmAlert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                int successCount = 0;
+                int failCount = 0;
+                
+                for (LogFileItem logItem : logItems) {
+                    if (logItem.file.exists() && logItem.file.delete()) {
+                        successCount++;
+                        logTask("🗑️ Deleted: " + logItem.folderPath + "/" + logItem.fileName);
+                    } else {
+                        failCount++;
+                        logTask("❌ Failed to delete: " + logItem.fileName);
+                    }
+                }
+                
+                if (failCount == 0) {
+                    showToast(String.format("✅ Deleted %d file(s)", successCount), "success");
+                } else {
+                    showToast(String.format("⚠️ Deleted %d, Failed %d", successCount, failCount), "warning");
+                }
+            }
+        });
+    }
+    
+    private String getButtonStyle(String color) {
+        return String.format("""
+            -fx-background-color: %s;
+            -fx-text-fill: white;
+            -fx-font-size: 13px;
+            -fx-font-weight: bold;
+            -fx-padding: 10 20;
+            -fx-background-radius: 15;
+            -fx-cursor: hand;
+        """, color);
+    }
+    
+    // ============ UTILITY METHODS ============
     
     private void performStoreTaskAuto(String taskId, String itemStr) throws Exception {
         if (itemStr == null) {
