@@ -101,7 +101,7 @@ public class StorageManager {
     }
 
     // Synchronized - prevents multiple AGVs moving to same destination
-    public synchronized void moveItem(Position from, Position to)
+    public void moveItem(Position from, Position to)
             throws CellEmptyException, CellOccupiedException, CellLockedException, CellNotFoundException {
 
         Cell fromCell = storage.getCell(from);
@@ -109,17 +109,19 @@ public class StorageManager {
 
         if (fromCell == null || toCell == null)
             throw new CellNotFoundException();
+            
+        synchronized (fromCell) {
+            if (fromCell.isEmpty())
+                throw new CellEmptyException(from);
+            if (!toCell.isEmpty())
+                throw new CellOccupiedException(to);
+            if (fromCell.isLocked() || toCell.isLocked())
+                throw new CellLockedException();
 
-        if (fromCell.isEmpty())
-            throw new CellEmptyException(from);
-        if (!toCell.isEmpty())
-            throw new CellOccupiedException(to);
-        if (fromCell.isLocked() || toCell.isLocked())
-            throw new CellLockedException();
-
-        Item item = fromCell.retrieve();
-        toCell.store(item);
-        item.moveTo(to);
+            Item item = fromCell.retrieve();
+            toCell.store(item);
+            item.moveTo(to);
+        }
     }
 
     // NO synchronization - not called directly by AGVs

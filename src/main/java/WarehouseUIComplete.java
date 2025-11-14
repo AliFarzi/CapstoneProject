@@ -661,19 +661,7 @@ public class WarehouseUIComplete extends Application {
                 Position from = parsePosition(qTask.fromPosition);
                 Position to = parsePosition(qTask.toPosition);
 
-                // perfomMoveTask(taskId, vehicleId, from, to);
-                // break;
-
-                logTask(String.format("  [%s] %s moving to %s...", taskId, vehicleId, from));
-                Thread.sleep(1500);
-
-                logTask(String.format("  [%s] Picking up item...", taskId));
-                Thread.sleep(1000);
-
-                warehouse.moveItem(from, to);
-
-                logTask(String.format("  [%s] Moved item: %s → %s", taskId, from, to));
-                Thread.sleep(1500);
+                perfomMoveTask(taskId, vehicleId, from, to);
                 break;
 
             case "Charge Equipment":
@@ -786,8 +774,7 @@ public class WarehouseUIComplete extends Application {
         return panel;
     }
 
- 
-   private VBox createWarehouseGridSection() {
+    private VBox createWarehouseGridSection() {
         VBox section = new VBox(15);
         section.setStyle("""
                     -fx-background-color: white;
@@ -858,9 +845,9 @@ public class WarehouseUIComplete extends Application {
     private StackPane createEmptyCell(int row, int col) {
         StackPane pane = new StackPane();
         pane.setPrefSize(50, 50);
-        
+
         pane.setStyle("-fx-background-color: #F5F5F5; -fx-border-color: #E0E0E0; " +
-                     "-fx-border-width: 1; -fx-background-radius: 5;");
+                "-fx-border-width: 1; -fx-background-radius: 5;");
 
         Label posLabel = new Label(String.format("%d,%d", row, col));
         posLabel.setFont(Font.font(7));
@@ -873,10 +860,6 @@ public class WarehouseUIComplete extends Application {
 
         return pane;
     }
-
-
-        
-
 
     private StackPane createCellPane(StorageModule.model.Cell cell) {
         StackPane pane = new StackPane();
@@ -1353,24 +1336,42 @@ public class WarehouseUIComplete extends Application {
 
     // ============ UTILITY METHODS ============
 
+    private void perfomMoveTask(String taskId, String vehicleId, Position from, Position to) throws Exception {
+
+        equipmentManager.assignToTask(vehicleId);
+        logTask(String.format("  [%s] %s moving to %s...", taskId, vehicleId, from));
+        Thread.sleep(1500);
+        logTask(String.format("  [%s] Picking up item...", taskId));
+        
+        MoveTask moveTask = new MoveTask(taskId, warehouse, from, to);
+        moveTask.run();
+        equipmentManager.release(vehicleId);
+
+        if(moveTask.getException() != null) {
+            logTask(String.format("  [%s] Failed to move item from %s to %s", taskId, from, to));
+            throw moveTask.getException();
+        }
+        
+        logTask(String.format("  [%s] Moved item: %s → %s", taskId, from, to));
+    }
+
     private void performRetrieveTask(String taskId, String vehicleId, Position retrievePos) throws Exception {
 
         if (retrievePos == null) {
             throw new Exception("Please select a valid position!");
         }
 
-        
         equipmentManager.assignToTask(vehicleId);
         logTask(String.format("  [%s] %s moving to %s...", taskId, vehicleId, retrievePos));
         Thread.sleep(1500);
-        RetrieveTask retrieveTask = new RetrieveTask(taskId,warehouse, retrievePos);
+        RetrieveTask retrieveTask = new RetrieveTask(taskId, warehouse, retrievePos);
         retrieveTask.run();
         equipmentManager.release(vehicleId);
 
-        if(retrieveTask.getException() != null) {
+        if (retrieveTask.getException() != null) {
             logTask(String.format("  [%s] Failed to retrieve item from %s", taskId, retrievePos));
             throw retrieveTask.getException();
-            
+
         }
         logTask(String.format("  [%s] Retrieved item from %s", taskId, retrievePos));
         Thread.sleep(1000);
@@ -1409,13 +1410,13 @@ public class WarehouseUIComplete extends Application {
                 StoreManualTask storeManualTask = new StoreManualTask(taskId, equipmentManager, warehouse, item,
                         position);
                 storeManualTask.run();
-                
-                if(storeManualTask.getException() != null) {
+
+                if (storeManualTask.getException() != null) {
                     logTask(String.format("  [%s] Failed to store %s at %s", taskId, itemId, position));
                     throw storeManualTask.getException();
                 }
 
-                equipmentManager.release(vehicleId); 
+                equipmentManager.release(vehicleId);
 
                 logTask(String.format("  [%s] Stored %s at %s", taskId, itemId, position));
                 Thread.sleep(500);
