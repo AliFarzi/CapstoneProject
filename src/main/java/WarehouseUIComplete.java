@@ -43,6 +43,8 @@ public class WarehouseUIComplete extends Application {
     private ComboBox<String> positionDropdown;
     private ComboBox<String> fromPositionDropdown;
     private ComboBox<String> toPositionDropdown;
+    private ComboBox<Integer> levelSelector;
+    private int currentLevel = 1;
     private TextArea runningTasksArea;
     private TextArea chargingStationArea;
     private GridPane warehouseGrid;
@@ -659,6 +661,9 @@ public class WarehouseUIComplete extends Application {
                 Position from = parsePosition(qTask.fromPosition);
                 Position to = parsePosition(qTask.toPosition);
 
+                // perfomMoveTask(taskId, vehicleId, from, to);
+                // break;
+
                 logTask(String.format("  [%s] %s moving to %s...", taskId, vehicleId, from));
                 Thread.sleep(1500);
 
@@ -781,7 +786,8 @@ public class WarehouseUIComplete extends Application {
         return panel;
     }
 
-    private VBox createWarehouseGridSection() {
+ 
+   private VBox createWarehouseGridSection() {
         VBox section = new VBox(15);
         section.setStyle("""
                     -fx-background-color: white;
@@ -790,7 +796,29 @@ public class WarehouseUIComplete extends Application {
                 """);
         section.setPadding(new Insets(20));
 
-        Label sectionTitle = createSectionTitle("📦 Warehouse Grid (Level 1)");
+        HBox headerBox = new HBox(15);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label sectionTitle = createSectionTitle("📦 Warehouse Grid");
+        HBox.setHgrow(sectionTitle, Priority.ALWAYS);
+
+        Label levelLabel = new Label("Level:");
+        levelLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+
+        levelSelector = new ComboBox<>();
+        List<Integer> levels = new ArrayList<>();
+        for (int i = 1; i <= gridZ; i++) {
+            levels.add(i);
+        }
+        levelSelector.setItems(FXCollections.observableArrayList(levels));
+        levelSelector.setValue(1);
+        levelSelector.setPrefWidth(80);
+        levelSelector.setOnAction(e -> {
+            currentLevel = levelSelector.getValue();
+            updateWarehouseGrid();
+        });
+
+        headerBox.getChildren().addAll(sectionTitle, levelLabel, levelSelector);
 
         warehouseGrid = new GridPane();
         warehouseGrid.setHgap(5);
@@ -804,7 +832,7 @@ public class WarehouseUIComplete extends Application {
         scrollPane.setFitToHeight(true);
         scrollPane.setPrefHeight(450);
 
-        section.getChildren().addAll(sectionTitle, scrollPane);
+        section.getChildren().addAll(headerBox, scrollPane);
         return section;
     }
 
@@ -813,18 +841,42 @@ public class WarehouseUIComplete extends Application {
 
         for (int row = 1; row <= gridX; row++) {
             for (int col = 1; col <= gridY; col++) {
-                Position pos = new Position(row, col, 1);
+                Position pos = new Position(row, col, currentLevel);
 
                 try {
                     StorageModule.model.Cell cell = warehouse.getStorage().getCell(pos);
                     StackPane cellPane = createCellPane(cell);
-                    warehouseGrid.add(cellPane, col - 1, row - 1);
+                    warehouseGrid.add(cellPane, cell.getPosition().getY() - 1, cell.getPosition().getX() - 1);
                 } catch (Exception e) {
                     // Cell not found
                 }
             }
         }
     }
+
+    // FIX #3: Method to create empty cell visualization
+    private StackPane createEmptyCell(int row, int col) {
+        StackPane pane = new StackPane();
+        pane.setPrefSize(50, 50);
+        
+        pane.setStyle("-fx-background-color: #F5F5F5; -fx-border-color: #E0E0E0; " +
+                     "-fx-border-width: 1; -fx-background-radius: 5;");
+
+        Label posLabel = new Label(String.format("%d,%d", row, col));
+        posLabel.setFont(Font.font(7));
+        posLabel.setStyle("-fx-text-fill: #999;");
+
+        pane.getChildren().add(posLabel);
+
+        Tooltip tooltip = new Tooltip("Position: (" + row + "," + col + "," + currentLevel + ")\nNo cell data");
+        Tooltip.install(pane, tooltip);
+
+        return pane;
+    }
+
+
+        
+
 
     private StackPane createCellPane(StorageModule.model.Cell cell) {
         StackPane pane = new StackPane();
