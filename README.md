@@ -5,6 +5,8 @@
 
 > A Thread-safe warehouse management system with automated AGV coordination, real-time storage management, and intelligent charging orchestration.
 
+Access our Screencast: [Screencast of Capstone Project](https://drive.google.com/file/d/1jrlGvk98sc07GsNpCNYLMugci5zKijiy/view?usp=drive_link)
+
 ---
 
 ##  Features
