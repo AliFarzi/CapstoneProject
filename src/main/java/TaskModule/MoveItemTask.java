@@ -5,7 +5,7 @@ import StorageModule.service.StorageManager;
 import LoggingModule.LoggingManager;
 import LoggingModule.LogLevel;
 
-public class MoveTask implements Runnable {
+public class MoveItemTask implements Runnable {
 
     private final String id;
     private final StorageManager storageManager;
@@ -14,7 +14,7 @@ public class MoveTask implements Runnable {
     private final LoggingManager loggingManager = LoggingManager.getInstance();
     private Exception exception;
 
-    public MoveTask(String id, StorageManager storageManager, Position fromPosition, Position toPosition) {
+    public MoveItemTask(String id, StorageManager storageManager, Position fromPosition, Position toPosition) {
         this.id = id;
         this.storageManager = storageManager;
         this.fromPosition = fromPosition;

@@ -1342,8 +1342,8 @@ public class WarehouseUIComplete extends Application {
         logTask(String.format("  [%s] %s moving to %s...", taskId, vehicleId, from));
         Thread.sleep(1500);
         logTask(String.format("  [%s] Picking up item...", taskId));
-        
-        MoveTask moveTask = new MoveTask(taskId, warehouse, from, to);
+
+        MoveItemTask moveTask = new MoveItemTask(taskId, warehouse, from, to);
         moveTask.run();
         equipmentManager.release(vehicleId);
 
