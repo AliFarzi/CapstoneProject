@@ -13,6 +13,7 @@ public class ChargingTask implements Runnable {
     private final ChargingStation chargingStation;
     private final Equipment equipment;
     private final LoggingManager logger = LoggingManager.getInstance();
+    private Exception exception;
 
     public ChargingTask(EquipmentManager equipmentManager, ChargingStation chargingStation, Equipment equipment, String id) {
 
@@ -20,6 +21,10 @@ public class ChargingTask implements Runnable {
         this.chargingStation = chargingStation;
         this.equipment = equipment;
         this.id = id;
+    }
+
+    public Exception getException() {
+        return exception;
     }
 
     @Override
@@ -37,10 +42,12 @@ public class ChargingTask implements Runnable {
             
 
         } catch (EquipmentChargeFullException e) {
+            this.exception = e;
             logger.log("Charging failed for Equipment: " + equipment.getId() + " - " + e.getMessage(), LogLevel.ERROR, id);
                 return; // Exit if already fully charged
 
         } catch (Exception e) {
+            this.exception = e;
             logger.log("Charging initialization failed for Equipment: " + equipment.getId() + " - " + e.getMessage(), LogLevel.ERROR, id);
              return; // Exit if sending to charge failed
         }
@@ -59,11 +66,13 @@ public class ChargingTask implements Runnable {
             
 
         } catch (InterruptedException ie) {
+            this.exception = ie;
             Thread.currentThread().interrupt();
             logger.log("Charging interrupted for Equipment: " + equipment.getId(),
                        LogLevel.WARN, id);
 
         } catch (Exception e) {
+            this.exception = e;
             logger.log("Unexpected error during charging for Equipment: " + equipment.getId()
                     + " - " + e.getMessage(), LogLevel.ERROR, id);
         } finally{
@@ -76,7 +85,7 @@ public class ChargingTask implements Runnable {
                 equipment.setChargingTime(0);
 
             } catch (Exception e) {
-
+                this.exception = e;
                 logger.log("Error occurred while releasing Equipment ID: " + equipment.getId() + " from charge - " + e.getMessage(), LogLevel.ERROR, id);
 
             }

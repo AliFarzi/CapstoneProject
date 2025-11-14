@@ -18,11 +18,14 @@ import StorageModule.service.StorageManager;
 import StorageModule.exceptions.*;
 import EqiupmentModule.model.*;
 import EqiupmentModule.service.EquipmentManager;
-import TaskModule.ChargingTask;
+import TaskModule.*;
 
 import java.util.concurrent.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.jupiter.api.extension.ExtensionContext.Store;
+
 import java.io.File;
 
 public class WarehouseUIComplete extends Application {
@@ -650,7 +653,7 @@ public class WarehouseUIComplete extends Application {
         
         switch (qTask.task) {
             case "Store Item (Auto)":
-                performStoreTaskAuto(taskId, qTask.item);
+                performStoreTaskAuto(taskId, qTask.item, vehicleId);
                 break;
                 
             case "Store Item (Manual Position)":
@@ -1325,37 +1328,58 @@ public class WarehouseUIComplete extends Application {
     
     // ============ UTILITY METHODS ============
     
-    private void performStoreTaskAuto(String taskId, String itemStr) throws Exception {
+    private void performStoreTaskAuto(String taskId, String itemStr, String vehicleId) throws Exception {
+
+
         if (itemStr == null) {
             throw new Exception("Please select an item!");
         }
         
         String itemId = itemStr.split(" - ")[0];
         Item item = itemsMap.get(itemId);
-        
+
         if (item == null) {
             throw new Exception("Item not found: " + itemId);
         }
-        
-        logTask(String.format("  [%s] AGV picking up %s...", taskId, itemId));
         Thread.sleep(1000);
+        logTask(String.format("  [%s] Assigning AGV  %s...", taskId, vehicleId));
+
+        equipmentManager.assignToTask(vehicleId); 
+             synchronized (item) {
+                if (item.getStatus() == Item.Status.MOVING) {
+                throw new Exception("Item is Moving: " + itemId);
+                }
+                if (item.getStatus() == Item.Status.STORED) {
+                throw new Exception("Item is Already Stored: " + itemId);
+            
+                }
         
-        logTask(String.format("  [%s] Finding available cell...", taskId));
-        Thread.sleep(500);
+        // logTask(String.format("  [%s] AGV picking up %s...", taskId, itemId));
+        // Thread.sleep(1000);
         
-        warehouse.addItem(item);
+        // logTask(String.format("  [%s] Finding available cell...", taskId));
+        // Thread.sleep(500);
         
-        logTask(String.format("  [%s] Stored %s at %s", taskId, itemId, item.getPosition()));
-        Thread.sleep(500);
+        // warehouse.addItem(item);
+
+                StoreAutoTask storeAutoTask = new StoreAutoTask(taskId, equipmentManager, warehouse, item);
+                storeAutoTask.run();
+        
+                logTask(String.format("  [%s] Stored %s at %s", taskId, itemId, item.getPosition()));
+                Thread.sleep(500);
+                equipmentManager.release(vehicleId);
+       
+            }
+            
+       
+        
+
+       
     }
     
     private void performChargeTask(String taskId, String vehicleId) throws Exception {
-        Equipment equipment = findEquipmentById(vehicleId);
-        if (equipment == null) {
-            throw new Exception("Equipment not found!");
-        }
+        Equipment equipment = equipmentManager.requireById(vehicleId);
         logTask(String.format("  [%s] %s moving to charging station...", taskId, vehicleId));
-        Thread.sleep(1000);
 
         ChargingStation station = null;
         while(station == null) {
@@ -1380,7 +1404,11 @@ public class WarehouseUIComplete extends Application {
         ChargingTask chargingTask = new ChargingTask(equipmentManager, station, equipment, taskId);
         chargingTask.run();
         station.setOccupied(false);
-        logTask(String.format("  [%s] %s fully charged!", taskId, vehicleId));
+        if(chargingTask.getException() != null) {
+            throw chargingTask.getException();
+        }else {
+            logTask(String.format("  [%s] %s fully charged!", taskId, vehicleId));
+        }
     }
     
     private Position parsePosition(String posStr) {
@@ -1393,14 +1421,6 @@ public class WarehouseUIComplete extends Application {
         );
     }
     
-    private Equipment findEquipmentById(String id) {
-        for (Equipment e : equipmentManager.getAll()) {
-            if (e.getId().equals(id)) {
-                return e;
-            }
-        }
-        return null;
-    }
     
     private Label createSectionTitle(String text) {
         Label label = new Label(text);

@@ -36,7 +36,7 @@ public class StorageManager {
        AUTO PLACEMENT
        Synchronized + lock cell immediately
     */
-    public synchronized void addItem(Item item)
+    public  void addItem(Item item)
             throws StorageFullException, CellOccupiedException, CellLockedException, CellNotFoundException {
 
         // Find AND lock cell in one atomic operation
@@ -44,10 +44,13 @@ public class StorageManager {
         List<Cell> cells = storage.getCells();
         
         for (Cell c : cells) {
-            if (c.isAvailable()) {
+            synchronized (c) {
+                if (c.isAvailable()) {
                 c.lock();  // Lock immediately when found!
                 cell = c;
                 break;
+            }
+          
             }
         }
 
@@ -59,7 +62,9 @@ public class StorageManager {
             cell.store(item);
             item.moveTo(cell.getPosition());
         } finally {
-            cell.unlock();  // Always unlock, even if exception
+            synchronized (cell) {
+                cell.unlock();  // Always unlock, even if exception
+            }
         }
     }
 

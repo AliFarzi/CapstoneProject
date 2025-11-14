@@ -20,7 +20,7 @@ public class Item {
         this.description = description;
         this.weight = weight;
         this.position = position;
-        this.status = Status.STORED; // default status when created
+        this.status = Status.RETRIEVED; // default status when created
     }
 
     public String getId() {
@@ -57,7 +57,6 @@ public class Item {
 
     public void moveTo(Position newPosition) {
         this.position = newPosition;
-        this.status = Status.MOVING;
     }
 
     @Override

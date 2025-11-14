@@ -44,7 +44,7 @@ public class EquipmentManager {
         return available;
     }
 
-    private Equipment requireById(String id) throws EquipmentNotFoundException {
+    public Equipment requireById(String id) throws EquipmentNotFoundException {
         if (id == null || id.isBlank())
             throw new EquipmentNotFoundException("Equipment id is empty");
         for (Equipment e : equipmentList) {
@@ -56,20 +56,25 @@ public class EquipmentManager {
 
     public void assignToTask(String id) throws EquipmentOperationException {
         try {
+
             Equipment e = requireById(id);
 
-            Equipment.EquipmentState st = e.getState();
-            if (st == Equipment.EquipmentState.BUSY
-                    || st == Equipment.EquipmentState.CHARGING
-                    || st == Equipment.EquipmentState.ERROR) {
-                throw new EquipmentUnavailableException("Equipment '" + id + "' not available: " + st);
-            }
-            if (e.getBatteryLevel() < 10.0) {
-                throw new InvalidEquipmentStateException("Battery too low for assignment");
-            }
+            synchronized (e) {
+                Equipment.EquipmentState st = e.getState();
+                System.out.println("Equipment State: " + st);
+                if (st == Equipment.EquipmentState.BUSY
+                        || st == Equipment.EquipmentState.CHARGING
+                        || st == Equipment.EquipmentState.ERROR) {
+                    throw new EquipmentUnavailableException("Equipment '" + id + "' not available: " + st);
+                }
+            
+                if (e.getBatteryLevel() < 10.0) {
+                    throw new InvalidEquipmentStateException("Battery too low for assignment");
+                }
 
-            e.setState(Equipment.EquipmentState.BUSY);
-            logger.log("Assigned " + id, LogLevel.INFO, "EquipmentManager");
+                e.setState(Equipment.EquipmentState.BUSY);
+                logger.log("Assigned " + id, LogLevel.INFO, "EquipmentManager");
+            }
 
         } catch (EquipmentNotFoundException
                 | EquipmentUnavailableException
@@ -81,11 +86,14 @@ public class EquipmentManager {
 
     public void release(String id) throws EquipmentOperationException {
         Equipment e = requireById(id);
-        if (e.getState() == Equipment.EquipmentState.IDLE ) {
-            throw new InvalidEquipmentStateException("Only BUSY equipment can be released");
+        synchronized (e) {
+            if (e.getState() == Equipment.EquipmentState.IDLE ) {
+                throw new InvalidEquipmentStateException("Only BUSY equipment can be released");
+            }
+        
+            e.setState(Equipment.EquipmentState.IDLE);
+            logger.log("Released " + id, LogLevel.INFO, "EquipmentManager");
         }
-        e.setState(Equipment.EquipmentState.IDLE);
-        logger.log("Released " + id, LogLevel.INFO, "EquipmentManager");
     }
 
     public void sendToCharge(Equipment e, ChargingStation station) throws EquipmentOperationException {
