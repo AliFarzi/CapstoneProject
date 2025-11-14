@@ -9,7 +9,8 @@ public class LogApp {
         Scanner scanner = new Scanner(System.in);
         LoggingManager logger = LoggingManager.getInstance();
 
-        File logsBase = new File("CapstoneProject/logs");
+        // must match LoggingManager.baseDir
+        File logsBase = new File("src/main/java/logs");
 
         // List top-level folders dynamically
         String[] topFolders = logsBase.list((current, name) -> new File(current, name).isDirectory());
@@ -33,7 +34,6 @@ public class LogApp {
         File logFolder;
 
         if (subFolders != null && subFolders.length > 0) {
-            // There are subfolders, ask user to select one
             System.out.println("Available subfolders:");
             for (int i = 0; i < subFolders.length; i++) {
                 System.out.println((i + 1) + ". " + subFolders[i].getName());
@@ -44,7 +44,6 @@ public class LogApp {
             scanner.nextLine();
             logFolder = subFolders[subChoice - 1];
         } else {
-            // No subfolders, logs are directly in selected folder
             logFolder = selectedFolder;
         }
 
@@ -70,16 +69,22 @@ public class LogApp {
         scanner.nextLine(); // consume newline
 
         // Build the source string relative to logsBase
-        String relativeSource = logsBase.toPath().relativize(logFolder.toPath()).toString().replace("\\", "/");
+        String relativeSource =
+                logsBase.toPath().relativize(logFolder.toPath()).toString().replace("\\", "/");
 
         // Remove ".log" extension for the date
         String date = selectedFile.replace(".log", "");
-        if (actionChoice == 2) {
-            logger.deleteLog(relativeSource, date);
-        } else {
-            logger.openLog(relativeSource, date);
-            System.out.println(relativeSource + " log for " + date + " opened.");
-        }
 
+        // catch custom exception from LoggingManager
+        try {
+            if (actionChoice == 2) {
+                logger.deleteLog(relativeSource, date);
+            } else {
+                logger.openLog(relativeSource, date);
+                System.out.println(relativeSource + " log for " + date + " opened.");
+            }
+        } catch (LoggingException e) {
+            System.out.println("Logging error: " + e.getMessage());
+        }
     }
 }

@@ -15,14 +15,15 @@ public class LoggingManager {
     private static LoggingManager instance;
     private static final Object lock = new Object();
 
-    private final String baseDir = "src/main/java/logs"; // base folder for all logs
+    // base folder for all logs
+    private final String baseDir = "src/main/java/logs";
     private final String modulesDir = baseDir + "/modules";
 
     private LoggingManager() {
         initializeFolders();
     }
 
-    // Singleton pattern
+    // Singleton
     public static LoggingManager getInstance() {
         if (instance == null) {
             synchronized (lock) {
@@ -34,50 +35,60 @@ public class LoggingManager {
         return instance;
     }
 
-    // Create base folders
+    // create base folders, throw if something goes wrong
     private void initializeFolders() {
-        new File(baseDir).mkdirs();
-        new File(modulesDir).mkdirs();
+        File base = new File(baseDir);
+        if (!base.exists() && !base.mkdirs()) {
+            throw new LoggingException("Could not create base log directory: " + base.getAbsolutePath());
+        }
+
+        File modules = new File(modulesDir);
+        if (!modules.exists() && !modules.mkdirs()) {
+            throw new LoggingException("Could not create modules log directory: " + modules.getAbsolutePath());
+        }
     }
 
-    // Main log method
+    // main log method
     public void log(String message, LogLevel level, String source) {
 
         LocalDateTime now = LocalDateTime.now();
         String timestamp = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String logMessage = String.format("[%s][%s][%s] %s", timestamp, level, source, message);
 
-        // Write to system log
+        // write to system log
         writeToFile(baseDir, "system", logMessage);
 
-        // Write to module/equipment-specific log
+        // write to module/equipment-specific log
         writeToFile(modulesDir, source, logMessage);
     }
 
-    // Write log message to daily file
+    // write log message to daily file
     private void writeToFile(String parentDir, String folderName, String message) {
-        try {
-            File folder = new File(parentDir + "/" + folderName);
-            folder.mkdirs(); // creates folder if it doesn't exist
 
-            String fileName = LocalDate.now().toString() + ".log"; // daily log file
-            File logFile = new File(folder, fileName);
+        // 1) make sure folder exists
+        File folder = new File(parentDir + "/" + folderName);
+        if (!folder.exists() && !folder.mkdirs()) {
+            throw new LoggingException("Could not create log folder: " + folder.getAbsolutePath());
+        }
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {
-                writer.write(message);
-                writer.newLine();
-            }
+        // 2) write to the file
+        String fileName = LocalDate.now().toString() + ".log";   // daily log file
+        File logFile = new File(folder, fileName);
 
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {
+            writer.write(message);
+            writer.newLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            // rethrow as our own exception with a clear message
+            throw new LoggingException("Failed to write to log file: " + logFile.getAbsolutePath(), e);
         }
     }
 
     public void openLog(String source, String date) {
         File logFile = new File(baseDir + "/" + source + "/" + date + ".log");
+
         if (!logFile.exists()) {
-            System.out.println("Log file does not exist.");
-            return;
+            throw new LoggingException("Log file does not exist: " + logFile.getAbsolutePath());
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
@@ -86,7 +97,7 @@ public class LoggingManager {
                 System.out.println(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new LoggingException("Failed to read log file: " + logFile.getAbsolutePath(), e);
         }
     }
 
@@ -94,30 +105,16 @@ public class LoggingManager {
         File logFile = new File(baseDir + "/" + source + "/" + date + ".log");
 
         if (!logFile.exists()) {
-            System.out.println("Log file not found: " + logFile.getAbsolutePath());
-            return false;
+            throw new LogNotFoundException(logFile.getAbsolutePath());
         }
 
         boolean deleted = logFile.delete();
 
-        if (deleted) {
-            System.out.println("Log file deleted: " + logFile.getAbsolutePath());
-        } else {
-            System.out.println(" Failed to delete log file: " + logFile.getAbsolutePath());
+        if (!deleted) {
+            throw new LogDeleteException(logFile.getAbsolutePath());
         }
 
-        return deleted;
+        System.out.println("Log file deleted: " + logFile.getAbsolutePath());
+        return true;
     }
-
-    /*
-     * // Simple test
-     * public static void main(String[] args) {
-     * LoggingManager logger = LoggingManager.getInstance();
-     * 
-     * logger.log("Starting StorageManager task", LogLevel.INFO, "StorageManager");
-     * logger.log("Crane1 is busy", LogLevel.WARN, "Crane1");
-     * logger.log("Failed to move item 12 to Cell(5,3)", LogLevel.ERROR,
-     * "StorageManager");
-     * }
-     */
 }
