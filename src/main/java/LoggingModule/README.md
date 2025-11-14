@@ -77,6 +77,3 @@ All of them extend `LoggingException`.
 * Always access the logger through `LoggingManager.getInstance()`
 * File paths and directories are handled internally
 * The module is kept lightweight and easy to understand
-
-
-If you want, I can also create a **short version**, **presentation version**, or a **profile README style**.
