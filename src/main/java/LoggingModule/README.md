@@ -1,94 +1,79 @@
-Logging Module
+# Logging Module
 
-This module manages all log creation, reading, and deletion in the project.
-It collects messages from different subsystems (storage, equipment, simulation, tasks) and organizes them into a clear folder structure.
-The module uses plain Java file I/O and one custom exception to make error handling cleaner.
+A simple Java module that handles all project logging.
+It creates daily log files, separates system and module logs, and comes with a small CLI to view and delete logs.
+The logger uses a Singleton pattern, and all file operations are wrapped in custom exceptions for clearer error messages.
 
-Features
+---
 
-Creates a daily log file automatically
+# Features
 
-Separate folders for each module or equipment
+* One shared logger for the whole project (Singleton)
+* Daily log file creation
+* Separate folders for system + module logs
+* Log levels: INFO, WARNING, ERROR
+* CLI tool for browsing and deleting logs
+* Custom exceptions for read/write/delete issues
+* Easy to plug into any other module
 
-System-level log file for general events
+---
 
-Read log files through a simple console interface
+# Folder Structure
 
-Delete existing log files
-
-Clean error messages through LoggingException
-
-Folder Structure
-/LoggingModule
+```
+/logging-module
 │
-├─ LoggingManager.java      // core logging logic
-├─ LogApp.java              // console interface
-├─ LoggingException.java    // custom exception
-└─ LogLevel.java            // log level enum
+├─ LoggingManager.java          # Core logger
+├─ LogApp.java                  # CLI interface
+├─ LoggingException.java        # Base exception
+├─ exceptions/                  # Read/Write/Delete exceptions
+├─ LogLevel.java                # Enum
+└─ logs/
+    ├─ system/
+    └─ modules/                 # storage / equipment / task / simulation
+```
 
-Log storage structure:
-src/main/java/logs/
-│
-├─ system/                  // global logs
-└─ modules/<source>/        // logs for each module/equipment
+---
 
+## Quick Usage
 
-Each folder contains one log file per day:
+# Write a log
 
-2025-11-14.log
-
-How It Works
-Write a log
+```java
 LoggingManager logger = LoggingManager.getInstance();
-logger.log("Crane started lifting", LogLevel.INFO, "Crane1");
+logger.log("Storage module initialized", LogLevel.INFO);
+```
 
+# Logs folder layout
 
-This will:
+```
+logs/
+   system/2025-11-14.log
+   modules/storage/2025-11-14.log
+```
 
-create the folder if needed
+# Run CLI
 
-create or append the daily .log file
+```
+> View system logs
+> View module logs
+> Delete logs
+```
 
-write a timestamped log entry
+---
 
-Read or Delete Logs (CLI)
+# Exceptions
 
-LogApp.java allows you to:
+* **LogReadException** – could not read a file
+* **LogWriteException** – writing failed
+* **LogDeleteException** – delete operation failed
 
-pick a module folder
+All of them extend `LoggingException`.
 
-select a daily log file
+---
 
-open it or delete it
+# Notes
 
-The CLI catches LoggingException and prints clear messages instead of stack traces.
-
-Custom Exception
-
-The module uses one custom exception:
-
-LoggingException
-
-This exception is thrown when:
-
-a folder cannot be created
-
-a log file cannot be written
-
-a log file cannot be read
-
-a log file does not exist
-
-deletion fails
-
-This keeps the module simple while still following the project’s requirement for exception handling.
-
-Notes
-
-The module is self-contained and does not depend on other subsystems.
-
-All file operations use standard Java I/O (File, BufferedWriter, BufferedReader).
-
-The custom exception keeps the CLI output clean and understandable.
-
-No external libraries are used.
+* Always access the logger through `LoggingManager.getInstance()`
+* File paths and directories are handled internally
+* The module is kept lightweight and easy to understand
