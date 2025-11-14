@@ -17,19 +17,29 @@ public class StorageManager {
     }
 
     //  Synchronized - prevents multiple AGVs storing to same position
-    public synchronized void addItem(Item item, Position position)
+    public void addItem(Item item, Position position)
             throws CellOccupiedException, CellLockedException, CellNotFoundException {
 
+        
         Cell cell = storage.getCell(position);
         if (cell == null)
-            throw new CellNotFoundException(position);
-        if (cell.isLocked())
-            throw new CellLockedException(position);
-        if (!cell.isEmpty())
-            throw new CellOccupiedException(position);
+                throw new CellNotFoundException(position);
 
-        cell.store(item);
-        item.moveTo(position);
+        synchronized (cell){
+            if (cell.isAvailable()) {
+                    cell.lock();  // Lock immediately when found!
+            } else if (cell.isLocked()) {
+                throw new CellLockedException(position);
+            }
+        }
+        try{
+            cell.store(item);
+            item.moveTo(position);
+        } finally {
+            synchronized (cell) {
+                cell.unlock();  // Always unlock, even if exception
+            }
+            }
     }
 
     /**
@@ -46,9 +56,9 @@ public class StorageManager {
         for (Cell c : cells) {
             synchronized (c) {
                 if (c.isAvailable()) {
-                c.lock();  // Lock immediately when found!
-                cell = c;
-                break;
+                    c.lock();  // Lock immediately when found!
+                    cell = c;
+                    break;
             }
           
             }
