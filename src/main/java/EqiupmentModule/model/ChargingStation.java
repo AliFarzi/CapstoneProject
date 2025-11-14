@@ -41,6 +41,10 @@ public class ChargingStation {
         return occupied;
     }
 
+    public synchronized void setOccupied(boolean occupied) {
+        this.occupied = occupied;
+    }
+
     public String getEquipmentId() {
         return equipmentId;
     }
@@ -68,7 +72,7 @@ public class ChargingStation {
         synchronized (assignedEquipments) {
             
              if(assignedEquipments.isEmpty()) {
-                System.out.println("Charging Station ID: " + id + " No AGV, Current Queue Time (ms): " + queueTime);
+                
                 return 0;
             }
             for (Equipment e : assignedEquipments) {

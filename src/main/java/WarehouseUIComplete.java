@@ -1354,15 +1354,32 @@ public class WarehouseUIComplete extends Application {
         if (equipment == null) {
             throw new Exception("Equipment not found!");
         }
-        
-        ChargingStation station = chargingStations.get(0);
-        
         logTask(String.format("  [%s] %s moving to charging station...", taskId, vehicleId));
         Thread.sleep(1000);
+
+        ChargingStation station = null;
+        while(station == null) {
+            System.out.println("looking for available station...");
+            for (ChargingStation cs : chargingStations) {
+                synchronized (cs) {
+                    if (!cs.isOccupied()) {
+                        System.out.println("found available station: " + cs.getId());
+                        cs.setOccupied(true);
+                        station = cs;
+                        break;
+                    }
+                }
+            }    
+            if (station == null) {
+                logTask(String.format("  [%s] %s waiting for available charging station...", taskId, vehicleId));
+                Thread.sleep(1000);
+                System.out.println("no available station, retrying...");
+            }
+        }
         
         ChargingTask chargingTask = new ChargingTask(equipmentManager, station, equipment, taskId);
         chargingTask.run();
-        
+        station.setOccupied(false);
         logTask(String.format("  [%s] %s fully charged!", taskId, vehicleId));
     }
     

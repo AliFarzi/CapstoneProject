@@ -34,6 +34,7 @@ public class ChargingTask implements Runnable {
 
             logger.log("Starting Charging Process for Equipment: " + equipment.getId(), LogLevel.INFO, id);
             equipmentManager.sendToCharge(equipment, chargingStation);
+            
 
         } catch (EquipmentChargeFullException e) {
             logger.log("Charging failed for Equipment: " + equipment.getId() + " - " + e.getMessage(), LogLevel.ERROR, id);
@@ -48,6 +49,7 @@ public class ChargingTask implements Runnable {
         try {
 
             synchronized (chargingStation) {
+                
                 while(equipment.getBatteryLevel() < 100) {
                     chargingStation.startChargingSteps(equipment);
                     Thread.sleep(1000); // Simulate time passing
