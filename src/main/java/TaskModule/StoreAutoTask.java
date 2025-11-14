@@ -16,6 +16,7 @@ public class StoreAutoTask implements Runnable {
     private final StorageManager storageManager;
     private final Item item;
     private final LoggingManager logger = LoggingManager.getInstance();
+    private Exception exception;
 
     public StoreAutoTask(String id,EquipmentManager equipmentManager, StorageManager storageManager, Item item) {
         this.id = id;
@@ -41,7 +42,13 @@ public class StoreAutoTask implements Runnable {
             }
             
         } catch (Exception e) {
+            this.exception = e;
+            item.updateStatus(Item.Status.RETRIEVED);
             logger.log("Store Auto Task failed for Item: " + item.getId() + " - " + e.getMessage(), LogLevel.ERROR, id);
         }
+    }
+
+    public Exception getException() {
+        return exception;
     }
 }

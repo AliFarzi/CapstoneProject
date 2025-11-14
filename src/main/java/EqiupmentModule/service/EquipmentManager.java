@@ -90,7 +90,8 @@ public class EquipmentManager {
             if (e.getState() == Equipment.EquipmentState.IDLE ) {
                 throw new InvalidEquipmentStateException("Only BUSY equipment can be released");
             }
-        
+            
+            e.setBatteryLevel(e.getBatteryLevel() - 3.0); // Decrease battery by 3% on release
             e.setState(Equipment.EquipmentState.IDLE);
             logger.log("Released " + id, LogLevel.INFO, "EquipmentManager");
         }

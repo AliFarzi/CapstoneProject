@@ -6,7 +6,6 @@ import LoggingModule.LoggingManager;
 import LoggingModule.LogLevel;
 import StorageModule.model.*;
 import StorageModule.service.StorageManager;
-import javafx.geometry.Pos;
 
 public class StoreManualTask implements Runnable {
 
@@ -16,6 +15,7 @@ public class StoreManualTask implements Runnable {
     private final Item item;
     private final Position targetPosition;
     private final LoggingManager logger = LoggingManager.getInstance();
+    private Exception exception;
 
     public StoreManualTask(String id,EquipmentManager equipmentManager, StorageManager storageManager, Item item, Position targetPosition) {
         this.id = id;
@@ -41,11 +41,17 @@ public class StoreManualTask implements Runnable {
             }
             
         } catch (Exception e) {
+            this.exception = e;
+            item.updateStatus(Item.Status.RETRIEVED);
             logger.log("Store Auto Task failed for Item: " + item.getId() + " - " + e.getMessage(), LogLevel.ERROR, id);
         }
 
 
 
+    }
+
+    public Exception getException() {
+        return exception;
     }
 
 }

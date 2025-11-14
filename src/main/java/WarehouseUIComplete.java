@@ -650,15 +650,9 @@ public class WarehouseUIComplete extends Application {
                 break;
 
             case "Retrieve Item":
+
                 Position retrievePos = parsePosition(qTask.position);
-
-                logTask(String.format("  [%s] %s moving to %s...", taskId, vehicleId, retrievePos));
-                Thread.sleep(1500);
-
-                Item retrievedItem = warehouse.retrieveItem(retrievePos);
-
-                logTask(String.format("  [%s] Retrieved %s from %s", taskId, retrievedItem.getId(), retrievePos));
-                Thread.sleep(1000);
+                performRetrieveTask(taskId, vehicleId, retrievePos);
                 break;
 
             case "Move Item":
@@ -1307,6 +1301,29 @@ public class WarehouseUIComplete extends Application {
 
     // ============ UTILITY METHODS ============
 
+    private void performRetrieveTask(String taskId, String vehicleId, Position retrievePos) throws Exception {
+
+        if (retrievePos == null) {
+            throw new Exception("Please select a valid position!");
+        }
+
+        
+        equipmentManager.assignToTask(vehicleId);
+        logTask(String.format("  [%s] %s moving to %s...", taskId, vehicleId, retrievePos));
+        Thread.sleep(1500);
+        RetrieveTask retrieveTask = new RetrieveTask(taskId,warehouse, retrievePos);
+        retrieveTask.run();
+        equipmentManager.release(vehicleId);
+
+        if(retrieveTask.getException() != null) {
+            logTask(String.format("  [%s] Failed to retrieve item from %s", taskId, retrievePos));
+            throw retrieveTask.getException();
+            
+        }
+        logTask(String.format("  [%s] Retrieved item from %s", taskId, retrievePos));
+        Thread.sleep(1000);
+    }
+
     private void performStoreManualTask(String taskId, String itemStr, String vehicleId, String positionStr)
             throws Exception {
         if (itemStr == null) {
@@ -1340,9 +1357,16 @@ public class WarehouseUIComplete extends Application {
                 StoreManualTask storeManualTask = new StoreManualTask(taskId, equipmentManager, warehouse, item,
                         position);
                 storeManualTask.run();
+                
+                if(storeManualTask.getException() != null) {
+                    logTask(String.format("  [%s] Failed to store %s at %s", taskId, itemId, position));
+                    throw storeManualTask.getException();
+                }
+
+                equipmentManager.release(vehicleId); 
+
                 logTask(String.format("  [%s] Stored %s at %s", taskId, itemId, position));
                 Thread.sleep(500);
-                equipmentManager.release(vehicleId);
             } catch (Exception e) {
                 equipmentManager.release(vehicleId);
                 throw new Exception(e.getMessage());
@@ -1378,23 +1402,19 @@ public class WarehouseUIComplete extends Application {
 
                 }
 
-                // logTask(String.format(" [%s] AGV picking up %s...", taskId, itemId));
-                // Thread.sleep(1000);
-
-                // logTask(String.format(" [%s] Finding available cell...", taskId));
-                // Thread.sleep(500);
-
-                // warehouse.addItem(item);
-
                 StoreAutoTask storeAutoTask = new StoreAutoTask(taskId, equipmentManager, warehouse, item);
                 storeAutoTask.run();
+                if (storeAutoTask.getException() != null) {
+                    logTask(String.format("  [%s] Failed to store %s", taskId, itemId));
+                    throw storeAutoTask.getException();
+                }
 
                 logTask(String.format("  [%s] Stored %s at %s", taskId, itemId, item.getPosition()));
                 Thread.sleep(500);
                 equipmentManager.release(vehicleId);
             }
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             equipmentManager.release(vehicleId);
             throw new Exception(e.getMessage());
         }
