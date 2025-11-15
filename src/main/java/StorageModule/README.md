@@ -170,12 +170,10 @@ try (ResourceManager rm = new ResourceManager("resource-1")) {
 
 - Cell IDs follow the pattern: `C_{x}_{y}_{level}`
 - Position coordinates start at 1, not 0
-- Items default to `RETRIEVED` status when first created<img width="2424" height="2250" alt="Picture2" src="https://github.com/user-attachments/assets/a70cfac2-e231-491d-b22a-8ff5d43f5381" />
+- Items default to `RETRIEVED` status when first created
 - Storage grids are fully initialized at construction time
 
 <img width="123" height="500" alt="Picture1" src="https://github.com/user-attachments/assets/231f2bf4-7b01-42fb-beaf-c91a070aa7e6" />
-
-
 <img width="2424" height="2250" alt="Picture2" src="https://github.com/user-attachments/assets/178b9785-f0be-46b6-9753-df36191b164d" />
 
 
